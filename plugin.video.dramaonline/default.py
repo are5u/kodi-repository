@@ -2,7 +2,8 @@
 # (c)AresU, October 8, 2015
 # Greetz to: TioEuy & Bosen
 # Version:
-# 1.0: First release
+# 20151017: 1.1: Improve Performance & Show FanArt
+# 20151013: 1.0: First release
 
 import xbmc,xbmcplugin
 import xbmcgui
@@ -90,12 +91,14 @@ def showMenu(url):
     content = getUrl(url)
     pass#print  "content B =", content
     regTxt ='<li class=".*?"> .*? <a href="(.+?)" class="thumbnail" title="(.+?)">.*?<span class="image_intro" style="background\-image\:url\(\'(.+?)\'\)">' #MostPopular
-    match = re.compile(regTxt,re.DOTALL).findall(content)
+    match = re.split(regTxt,content)
+#    pprint(match)
     pic = " "
-    for url,name,pic in match:
+    for i in range(1,len(match),4):
       #gedebug('url: %s, name: %s, pic: %s' % (url,name,pic))
-      url=mainURL+url
-      pic=pic.replace(' ','%20')
+      url=mainURL+match[i]
+      name=match[i+1]
+      pic=match[i+2].replace(' ','%20')
       addDirectoryItem(name, {"name":name, "url":url, "mode":11}, pic)
     #addDirectoryItem("Categories", {"name":"Categories", "url":url, "mode":2}, pic)
     #addDirectoryItem("Search", {"name":"Search", "url":Host, "mode":8}, pic)
@@ -105,11 +108,12 @@ def showEpisodes(name1, url):
     print 'GEDEBUG: Name: %s URL: %s' % (name1,url)
     content = getUrl(url)
     regTxt='<a href="(.+?)" class="thumbnail" title="(.+?)">' #Episodes
-    match = re.compile(regTxt).findall(content)
+    match = re.split(regTxt,content)
     pic = " "
-    for url,name in match:
+    for i in range(1,len(match),3):
       #gedebug('url: %s, episode: %s' % (url,name))
-      urlTarget=mainURL+url
+      urlTarget=mainURL+match[i]
+      name=match[i+1]
       addDirectoryItem(name, {"name":name, "url":urlTarget, "mode":12}, pic)
     xbmcplugin.endOfDirectory(thisPlugin)
 
@@ -133,6 +137,8 @@ std_headers = {
 
 def addDirectoryItem(name, parameters={},pic=""):
     li = xbmcgui.ListItem(name,iconImage="DefaultFolder.png", thumbnailImage=pic)
+    li.setInfo( "video", { "Title" : name, "FileName" : name} )
+    li.setProperty('Fanart_Image', pic)
     url = sys.argv[0] + '?' + urllib.urlencode(parameters)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=True)
 
